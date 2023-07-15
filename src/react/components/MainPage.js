@@ -19,6 +19,12 @@ function TabContainer(props) {
   );
 }
 
+function checkFileSupport(file) {
+  const format = file.name.split('.').slice(-1)[0]
+  const formats = ['png', 'jpg', 'hdr']
+  return formats.includes(format)
+}
+
 const styles = theme => ({
   root: {
     backgroundColor: theme.palette.background.paper,
@@ -50,23 +56,18 @@ class MainPage extends React.Component {
   onSaveOpen = () => {
     this.setState(() => ({ openSaveDialog: true }))
   }
+  onReset = () => {
+    renderProps.isResetCamera = true
+  }
   onSaveClose = () => {
     this.setState(() => ({ openSaveDialog: false }))
   }
-  onExposureChange = (e, val) => {
 
-    this.setState(() => ({ exposure: val }));
-    renderProps.exposure = (val * (renderProps.maxExposure / 100)).toFixed(2)
-    setExposure();
-    setExposureConv();
-  }
   onFileUpload = (e) => {
     const file = e.target.files[0];
     const format = file.name.split('.').slice(-1)[0]
-    const formats = ['png', 'jpg', 'hdr']
 
-    if (formats.includes(format)) {
-      // console.log(`File Accepted (${file.name.split('.').slice(-1)[0]})`)
+    if (checkFileSupport(file)) {
       this.setState(() => ({ showCanvas: true }))
       imageProps.file = file;
       imageProps.loaded = true;
@@ -84,7 +85,6 @@ class MainPage extends React.Component {
         this.setState(() => ({ exposure: renderProps.exposure / renderProps.maxExposure * 100 }))
       });
     } else {
-      // console.log(`Wrong File (${file.name.split('.').slice(-1)[0]})`)
       alert(`You used Wrong File (${file.name.split('.').slice(-1)[0]}) \n I accept only (.jpg,.png,.hdr) for now.`)
       this.setState(() => ({ showCanvas: false }))
       imageProps.file = null;
@@ -92,11 +92,18 @@ class MainPage extends React.Component {
       imageProps.format = ''
     }
 
+    var files = "";
+    imageProps.files = [];
+    for (const file of e.target.files) {
+      if (checkFileSupport(file)) {
+        imageProps.files.push(file);
+        files += file.name + ";";
+      }
+    }
 
   }
   onTabChange = (e, tabVal) => {
     this.setState(() => ({ tabVal }), () => {
-      console.log('Update')
       if (!this.state.cubeUpdated) {
         updateConv();
         this.setState(() => ({ cubeUpdated: true }))
@@ -144,19 +151,12 @@ class MainPage extends React.Component {
                 <GridRenders />
               </TabContainer>
             </SwipeableViews>
-
-            <div>
-              <div style={{ textAlign: 'center', fontSize: 13, fontWeight: 550 }}>
-                Exposure = {(this.state.exposure * (renderProps.maxExposure / 100)).toFixed(2)}
-              </div>
-              <Slider value={this.state.exposure} onChange={this.onExposureChange} />
-
-            </div>
           </Paper>
           <input
             style={{ display: 'none' }}
             id="flat-button-file"
             type="file"
+            multiple="multiple"
             onChange={this.onFileUpload}
           />
           <Paper style={{ width: '64vw', marginLeft: 'auto', marginRight: 'auto', marginTop: 60, background: '#ddd' }}>
@@ -164,11 +164,14 @@ class MainPage extends React.Component {
               <label htmlFor="flat-button-file" style={{ margin: 4 }}>
                 <Button variant="contained" component="span" color="primary">
                   Upload HDRI
-              </Button>
+                </Button>
               </label>
+              <Button onClick={this.onReset} variant="contained" component="span" style={{ margin: 4 }} color="primary">
+                Reset camera
+              </Button>
               <Button onClick={this.onSaveOpen} variant="contained" component="span" disabled={!this.state.showCanvas} style={{ margin: 4 }}>
                 Save
-            </Button>
+              </Button>
             </div>
           </Paper>
         </Paper>

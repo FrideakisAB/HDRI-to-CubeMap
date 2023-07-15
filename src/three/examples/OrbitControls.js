@@ -88,6 +88,15 @@ THREE.OrbitControls = function ( object, domElement ) {
 	// public methods
 	//
 
+	this.resetTarget = function () {
+		scope.target.copy( scope.target0 );
+		scope.object.position.set(0, 0, 1);
+		scope.object.zoom = scope.zoom0;
+
+		scope.object.updateProjectionMatrix();
+		scope.dispatchEvent( changeEvent );
+	};
+
 	this.getPolarAngle = function () {
 
 		return spherical.phi;
@@ -759,7 +768,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	function onMouseUp( event ) {
 
-		if ( scope.enabled === false ) return;
+		//if ( scope.enabled === false ) return;
 
 		handleMouseUp( event );
 
@@ -776,7 +785,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		if ( scope.enabled === false || scope.enableZoom === false || ( state !== STATE.NONE && state !== STATE.ROTATE ) ) return;
 
-		event.preventDefault();
 		event.stopPropagation();
 
 		scope.dispatchEvent( startEvent );

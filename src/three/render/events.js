@@ -3,7 +3,6 @@ import {resizeConv} from '../components/convert';
 import cameraControl from '../controls/cameraControl';
 import {convProps}from '../components/props';
 const customEvents =()=>{
-  // console.log('event',document.getElementById('MainCanvas'))
 
   window.addEventListener("resize",(event)=>{
     resize();

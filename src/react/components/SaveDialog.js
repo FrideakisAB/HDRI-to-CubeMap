@@ -3,7 +3,12 @@ import {
   Dialog, DialogActions, DialogContent, DialogTitle, Button, withStyles, Paper,
   LinearProgress, Select, MenuItem, InputLabel, FormControl
 } from '@material-ui/core';
+import { saveAs } from 'file-saver';
 import ClassNames from 'classnames';
+import { setExposure, hdrToneMapping } from '../../three/components/base'
+import { updateImage } from '../../three/textures/userTexture'
+import { updateConv, hdrToneMappingConv, setExposureConv } from '../../three/components/convert';
+import {hdrToneMappingProc} from '../../three/components/process'
 import { procRenderSep, procRenderUnity, procRenderUE4 } from '../../three/render/renderProc';
 import { hdrProcRenderSep, hdrProcRenderUnity, hdrProcRenderUE4 } from '../../three/render/hdrRenderProc';
 import CrossLayout from './saveDialogComp/CrossLayout';
@@ -11,6 +16,7 @@ import LineLayout from './saveDialogComp/LineLayout';
 import SeperateLayout from './saveDialogComp/SeperateLayout';
 import ResolutionSelect from './saveDialogComp/ResolutionSelect';
 import FormatSelect from './saveDialogComp/FormatSelect';
+import { imageProps } from '../../three/components/props';
 const styles = theme => ({
   optionUnity: {
     width: 496,
@@ -55,99 +61,114 @@ class SaveDialog extends React.Component {
     processed: false,
     processing: true,
     progress: 0,
+    maxProgress: 0,
     saveDisable: false,
     resolution: 256,
     format: 'png',
+    zip: null,
   }
 
 
   proccessFiles = () => event => {
-    console.log('saving files - index =', this.state.selected);
-    console.log(event.handler)
-    // console.dir(document.getElementById('SaveButton'))
-    // const myButton = document.getElementById('SaveButton')
-    this.setState(() => ({ saveDisable: true }))
+    this.setState(() => ({ saveDisable: true, processing: false, processed: true, progress: 0 }))
 
-    if (this.state.format === 'hdr') {
-      this.hdrProccess(href => {
-        this.setState(() => ({
-          url: href,
-          download: 'Standard-Cube-Map.zip',
-          processed: true,
-          saveDisable: false
-        }))
-      });
-    } else {
-      this.regularProccess(href => {
-        this.setState(() => ({
-          url: href,
-          download: 'Standard-Cube-Map.zip',
-          processed: true,
-          saveDisable: false
-        }))
-      });
-    }
+    this.state.zip = new JSZip();
+    var multiplierCount = (this.state.selected === 3? 6 : 1);
+    this.state.maxProgress = imageProps.files.length * multiplierCount;
+    console.log("Total files:" + this.state.maxProgress)
+      for (const file of imageProps.files) {
+        const format = file.name.split('.').slice(-1)[0]
+        if (true) {
+          this.setState(() => ({ showCanvas: true }))
+          imageProps.file = file;
+          imageProps.loaded = true;
+          imageProps.format = format;
+          updateImage(() => {
+            if (format === 'hdr') {
+              hdrToneMapping(true);
+              hdrToneMappingConv(true);
+              hdrToneMappingProc(true);
+            } else {
+              hdrToneMapping(false);
+              hdrToneMappingConv(false);
+              hdrToneMappingProc(false);
+            }
 
+            if (this.state.format == "hdr") {
+              this.hdrProccess(file.name.split('.')[0], this.state.zip, href => {});
+            } else {
+              this.regularProccess(file.name.split('.')[0], this.state.zip, href => {});
+            }
+          });
+        }
+        
+      }
   }
-  hdrProccess = (callback) => {
+  hdrProccess = (name, writer, callback) => {
     if (this.state.selected === 1) {
-      hdrProcRenderUnity(this.state.resolution, href => {
+      hdrProcRenderUnity(this.state.maxProgress, name, writer, this.state.resolution, href => {
         callback(href);
-      }, progress => {
-        const { progNow, progTotal } = progress
-        this.setState(() => ({ progress: progNow / progTotal * 100 }))
+      }, progres => {
+        this.setState(() => ({
+          progress: this.state.progress+1
+        }))
       })
     }
     if (this.state.selected === 2) {
-      hdrProcRenderUE4(this.state.resolution, href => {
+      hdrProcRenderUE4(this.state.maxProgress, name, writer, this.state.resolution, href => {
         callback(href);
-      }, progress => {
-        const { progNow, progTotal } = progress
-        this.setState(() => ({ progress: progNow / progTotal * 100 }))
+      }, progres => {
+        this.setState(() => ({
+          progress: this.state.progress+1
+        }))
       })
     }
     if (this.state.selected === 3) {
-      hdrProcRenderSep(this.state.resolution, href => {
+      hdrProcRenderSep(this.state.maxProgress, name, writer, this.state.resolution, href => {
         callback(href);
-      }, progress => {
-        const { progNow, progTotal } = progress
-        this.setState(() => ({ progress: progNow / progTotal * 100 }))
+      }, progres => {
+        this.setState(() => ({
+          progress: this.state.progress+1
+        }))
       })
     }
   }
-  regularProccess = (callback) => {
+  regularProccess = (name, writer, callback) => {
     if (this.state.selected === 1) {
-      procRenderUnity(this.state.resolution, href => {
+      procRenderUnity(this.state.maxProgress, name, writer, this.state.resolution, href => {
         callback(href);
-      }, progress => {
-        const { progNow, progTotal } = progress
-        this.setState(() => ({ progress: progNow / progTotal * 100 }))
+      }, progres => {
+        this.setState(() => ({
+          progress: this.state.progress+1
+        }))
       })
     }
     if (this.state.selected === 2) {
-      procRenderUE4(this.state.resolution, href => {
+      procRenderUE4(this.state.maxProgress, name, writer, this.state.resolution, href => {
         callback(href);
-      }, progress => {
-        const { progNow, progTotal } = progress
-        this.setState(() => ({ progress: progNow / progTotal * 100 }))
+      }, progres => {
+        this.setState(() => ({
+          progress: this.state.progress+1
+        }))
       })
     }
     if (this.state.selected === 3) {
-      procRenderSep(this.state.resolution, href => {
+      procRenderSep(this.state.maxProgress, name, writer, this.state.resolution, href => {
         callback(href);
-      }, progress => {
-        const { progNow, progTotal } = progress
-        this.setState(() => ({ progress: progNow / progTotal * 100 }))
+      }, progres => {
+        this.setState(() => ({
+          progress: this.state.progress+1
+        }))
       })
     }
   }
   saveFiles = () => {
-    // const myButton = document.getElementById('SaveButton')
-    // console.dir(myButton)
+    this.state.zip.generateAsync({type:"blob"}).then(function (blob) {
+      saveAs(blob, 'Cubemap.zip')
+    });
     this.onClose();
   }
   handleSelect = (index = 0) => event => {
-    console.log('works', index)
     this.setState(() => ({ selected: index }))
   }
   onSelectChange = name => event => {
@@ -191,18 +212,16 @@ class SaveDialog extends React.Component {
           <LineLayout classes={classes} selected={selected} onClick={this.handleSelect(2)} />
           <SeperateLayout classes={classes} selected={selected} onClick={this.handleSelect(3)} />
         </DialogContent>
-        <LinearProgress variant="determinate" value={this.state.progress} />
+        <LinearProgress variant="determinate" value={this.state.progress / parseFloat(this.state.maxProgress)} />
 
         <DialogActions>
 
           {this.state.processed ?
             <Button
               id={'SaveButton'}
-              href={this.state.url}
-              download={this.state.download}
               variant='contained'
               color='primary'
-              disabled={selected === 0 || this.state.saveDisable}
+              disabled={selected === 0 || !( this.state.progress === this.state.maxProgress )}
               onClick={this.saveFiles}
             >
               Save
@@ -210,9 +229,8 @@ class SaveDialog extends React.Component {
             :
             <Button
               variant='contained'
-              disabled={selected === 0}
+              disabled={selected === 0 || this.state.saveDisable}
               onClick={this.proccessFiles()}
-              disabled={this.state.saveDisable}
             >
               Process
             </Button>

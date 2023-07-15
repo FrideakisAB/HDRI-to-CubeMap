@@ -19,21 +19,23 @@ const updateConv = () => {
   convProps.refs.push(document.getElementById('convCanvContainer'))
   if (convProps.hdrToon) {
     convRenderers.map(renderer => {
-      renderer.toneMapping = ReinhardToneMapping;
-      renderer.toneMappingExposure = 4;
+      if (renderer != null) {
+        renderer.toneMapping = ReinhardToneMapping;
+        renderer.toneMappingExposure = 4;
+      }
     })
   } else {
     convRenderers.map(renderer => {
-      renderer.toneMapping = LinearToneMapping;
-      renderer.toneMappingExposure = 1;
+      if (renderer != null) {
+        renderer.toneMapping = LinearToneMapping;
+        renderer.toneMappingExposure = 1;
+      }
     })
   }
-  console.log('EndUpdate')
   resizeConv();
   customEventsCanv();
 }
 const resizeConv = () => {
-  console.log('resize!')
   if (convProps.refs.length !== 0) {
     const segSize = Math.floor(window.innerWidth * canvasProps.vhw / 3);
     convProps.refs[0].style.top = `${segSize}px`;
@@ -51,7 +53,9 @@ const resizeConv = () => {
     convProps.refs[6].style.height = `${segSize * 3}px`;
 
     convRenderers.map(renderer => {
-      renderer.setSize(segSize, segSize);
+      if (renderer != null) {
+        renderer.setSize(segSize, segSize);
+      }
     })
   }
 
@@ -90,20 +94,26 @@ const convRender = () => {
 }
 const setExposureConv = (val = renderProps.exposure) => {
   convRenderers.map(renderer => {
-    renderer.toneMappingExposure = val;
+    if (renderer != null) {
+      renderer.toneMappingExposure = val;
+    }
   })
 }
 const hdrToneMappingConv = (hdr = true) => {
   convProps.hdrToon = hdr
   if (hdr) {
     convRenderers.map(renderer => {
-      renderer.toneMapping = ReinhardToneMapping;
-      renderer.toneMappingExposure = 4;
+      if (renderer != null) {
+        renderer.toneMapping = ReinhardToneMapping;
+        renderer.toneMappingExposure = 4;
+      }
     })
   } else {
     convRenderers.map(renderer => {
-      renderer.toneMapping = LinearToneMapping;
-      renderer.toneMappingExposure = 1;
+      if (renderer != null) {
+        renderer.toneMapping = LinearToneMapping;
+        renderer.toneMappingExposure = 1;
+      }
     })
   }
 }
