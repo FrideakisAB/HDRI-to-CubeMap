@@ -27,7 +27,10 @@ const hdrToneMappingProc = (hdr = true) => {
     procRenderer.toneMappingExposure = 1;
   }
 }
+const setExposureProc = (val) => {
+  procRenderer.toneMappingExposure = val;
+}
 
 hdrToneMappingProc(true);
 
-export { procRenderer, hdrProcRenderer, hdrRenderTarget, hdrScene, procCamera, hdrToneMappingProc };
+export { procRenderer, hdrProcRenderer, hdrRenderTarget, hdrScene, procCamera, hdrToneMappingProc, setExposureProc };

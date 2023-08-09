@@ -8,7 +8,7 @@ import ClassNames from 'classnames';
 import { setExposure, hdrToneMapping } from '../../three/components/base'
 import { updateImage } from '../../three/textures/userTexture'
 import { updateConv, hdrToneMappingConv, setExposureConv } from '../../three/components/convert';
-import {hdrToneMappingProc} from '../../three/components/process'
+import {hdrToneMappingProc, setExposureProc} from '../../three/components/process'
 import { procRenderSep, procRenderUnity, procRenderUE4 } from '../../three/render/renderProc';
 import { hdrProcRenderSep, hdrProcRenderUnity, hdrProcRenderUE4 } from '../../three/render/hdrRenderProc';
 import CrossLayout from './saveDialogComp/CrossLayout';
@@ -16,7 +16,7 @@ import LineLayout from './saveDialogComp/LineLayout';
 import SeperateLayout from './saveDialogComp/SeperateLayout';
 import ResolutionSelect from './saveDialogComp/ResolutionSelect';
 import FormatSelect from './saveDialogComp/FormatSelect';
-import { imageProps } from '../../three/components/props';
+import { imageProps, renderProps } from '../../three/components/props';
 const styles = theme => ({
   optionUnity: {
     width: 496,
@@ -78,6 +78,7 @@ class SaveDialog extends React.Component {
     console.log("Total files:" + this.state.maxProgress)
       for (const file of imageProps.files) {
         const format = file.name.split('.').slice(-1)[0]
+        const exposureVal = imageProps.exposures[imageProps.files.indexOf(file)];
         if (true) {
           this.setState(() => ({ showCanvas: true }))
           imageProps.file = file;
@@ -93,6 +94,10 @@ class SaveDialog extends React.Component {
               hdrToneMappingConv(false);
               hdrToneMappingProc(false);
             }
+            renderProps.exposure = (exposureVal * (renderProps.maxExposure / 100)).toFixed(2)
+            setExposure();
+            setExposureConv();
+            setExposureProc(renderProps.exposure);
 
             if (this.state.format == "hdr") {
               this.hdrProccess(file.name.split('.')[0], this.state.zip, href => {});
